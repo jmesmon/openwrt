@@ -60,6 +60,24 @@ define Image/Build/Edi
 	$(STAGING_DIR_HOST)/bin/trx2edips $(BIN_DIR)/$(IMG_PREFIX)-$(1).trx $(BIN_DIR)/openwrt-$(2)-$(3).bin
 endef
 
+
+# 1: trx input
+# 2: bin output
+# 3: 4 magic bytes
+define Image/Build/Belkin_
+	echo -ne $(3) > $(2).head
+	dd if=$(1) of=/dev/stdout bs=4 skip=1 > $(2).tail
+	cat $(2).head $(2).tail > $(2)
+	rm -f $(2).head $(2).tail
+endef
+
+# $(1) : fs type ("squashfs")
+# $(2) : device name
+# $(3) : encoded printf string to use in place of the trx's "HDR\0"
+define Image/Build/Belkin
+	$(call Image/Build/Belkin_,$(BIN_DIR)/$(IMG_PREFIX)-$(1).trx,$(BIN_DIR)/openwrt-$(2)-$(patsubst jffs2-%,jffs2,$(1)).bin,$(3))
+endef
+
 define Image/Build/Huawei
 	dd if=/dev/zero of=$(BIN_DIR)/openwrt-$(2)-$(3)-gz.bin bs=92 count=1
 	echo -ne 'HDR0\x08\x00\x00\x00' >> $(BIN_DIR)/openwrt-$(2)-$(3)-gz.bin
@@ -118,10 +136,13 @@ define Image/Build/jffs2-64k
 	$(call Image/Build/CyberTAN,$(1),e3000_v1,61XN,1.0.3,$(patsubst jffs2-%,jffs2,$(1)))
 	$(call Image/Build/CyberTAN,$(1),e3200_v1,3200,1.0.1,$(patsubst jffs2-%,jffs2,$(1)))
 	$(call Image/Build/CyberTAN,$(1),e4200_v1,4200,1.0.5,$(patsubst jffs2-%,jffs2,$(1)))
+
 	$(call Image/Build/Motorola,$(1),wa840g,2,$(patsubst jffs2-%,jffs2,$(1)))
 	$(call Image/Build/Motorola,$(1),we800g,3,$(patsubst jffs2-%,jffs2,$(1)))
 	$(call Image/Build/Edi,$(1),ps1208mfg,$(patsubst jffs2-%,jffs2,$(1)))
 	$(call Image/Build/dwl3150,$(1),$(patsubst jffs2-%,jffs2,$(1)))
+
+	$(call Image/Build/Belkin,$(1),f7dxxxx,'\x78\x56\x34\x12')
 endef
 
 define Image/Build/squashfs
