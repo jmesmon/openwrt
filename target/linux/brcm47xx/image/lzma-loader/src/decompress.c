@@ -90,6 +90,12 @@ struct trx_header {
 #define EDIMAX_PS_HEADER_MAGIC	0x36315350 /*  "PS16"  */
 #define EDIMAX_PS_HEADER_LEN	0xc /* 12 bytes long for edimax header */
 
+#define BELKIN_F7D3301_MAGIC	0x20100322 /* a date of some sort */
+#define BELKIN_F7D3302_MAGIC	0x20090928
+#define BELKIN_F7D4302_MAGIC	0x20101006
+#define BELKIN_F7D4401_MAGIC	0x00018517
+#define BELKIN_F7DXXXX_QA_MAGIC	0x12345678
+
 /* beyound the image end, size not known in advance */
 extern unsigned char workspace[];
 
@@ -121,6 +127,24 @@ static __inline__ unsigned char get_byte(void)
 	return read_byte(0, &buffer, &fake), *buffer;
 }
 
+static int has_header_magic(unsigned char *data)
+{
+	UInt32 magic = ((struct trx_header *)data)->magic;
+
+	switch (magic) {
+	case TRX_MAGIC:
+	case BELKIN_F7D3301_MAGIC:
+	case BELKIN_F7D3302_MAGIC:
+	case BELKIN_F7D4302_MAGIC:
+	case BELKIN_F7D4401_MAGIC:
+	case EDIMAX_PS_HEADER_MAGIC:
+	case BELKIN_F7DXXXX_QA_MAGIC:
+		return 1;
+	default:
+		return 0;
+	}
+}
+
 /* should be the first function */
 void entry(unsigned long icache_size, unsigned long icache_lsize, 
 	unsigned long dcache_size, unsigned long dcache_lsize,
@@ -138,8 +162,7 @@ void entry(unsigned long icache_size, unsigned long icache_lsize,
 
 	/* look for trx header, 32-bit data access */
 	for (data = ((unsigned char *) KSEG1ADDR(BCM4710_FLASH));
-		((struct trx_header *)data)->magic != TRX_MAGIC &&
-		((struct trx_header *)data)->magic != EDIMAX_PS_HEADER_MAGIC;
+		 !has_header_magic(data);
 		 data += 65536);
 
 	if (((struct trx_header *)data)->magic == EDIMAX_PS_HEADER_MAGIC)
