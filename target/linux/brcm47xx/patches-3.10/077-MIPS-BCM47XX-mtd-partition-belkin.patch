@@ -1,0 +1,49 @@
+Index: linux-3.10.18/drivers/mtd/bcm47xxpart.c
+===================================================================
+--- linux-3.10.18.orig/drivers/mtd/bcm47xxpart.c
++++ linux-3.10.18/drivers/mtd/bcm47xxpart.c
+@@ -33,7 +33,12 @@
+ #define POT_MAGIC2			0x504f		/* OP */
+ #define ML_MAGIC1			0x39685a42
+ #define ML_MAGIC2			0x26594131
+-#define TRX_MAGIC			0x30524448
++#define TRX_MAGIC			0x30524448	/* HDR0 */
++#define BELKIN_F7D3301_MAGIC		0x20100322
++#define BELKIN_F7D3302_MAGIC		0x20090928
++#define BELKIN_F7D4302_MAGIC		0x20101006
++#define BELKIN_F7D4401_MAGIC		0x00018517
++#define BELKIN_F7DXXXX_QA_MAGIC	0x12345678
+ #define SQSH_MAGIC			0x71736873	/* shsq */
+ 
+ struct trx_header {
+@@ -45,6 +50,21 @@ struct trx_header {
+ 	uint32_t offset[3];
+ } __packed;
+ 
++static bool is_trx_magic(uint32_t magic)
++{
++	switch (magic) {
++	case TRX_MAGIC:
++	case BELKIN_F7D3301_MAGIC:
++	case BELKIN_F7D3302_MAGIC:
++	case BELKIN_F7D4302_MAGIC:
++	case BELKIN_F7D4401_MAGIC:
++	case BELKIN_F7DXXXX_QA_MAGIC:
++		return true;
++	default:
++		return false;
++	}
++}
++
+ static void bcm47xxpart_add_part(struct mtd_partition *part, char *name,
+ 				 u64 offset, uint32_t mask_flags)
+ {
+@@ -139,7 +159,7 @@ static int bcm47xxpart_parse(struct mtd_
+ 		}
+ 
+ 		/* TRX */
+-		if (buf[0x000 / 4] == TRX_MAGIC) {
++		if (is_trx_magic(buf[0x000 / 4])) {
+ 			trx = (struct trx_header *)buf;
+ 
+ 			trx_part = curr_part;
