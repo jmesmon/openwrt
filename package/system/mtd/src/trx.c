@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -35,6 +36,12 @@
 #include "crc32.h"
 
 #define TRX_MAGIC       0x30524448      /* "HDR0" */
+#define BELKIN_F7D3301_MAGIC 0x20100322
+#define BELKIN_F7D3302_MAGIC 0x20090928
+#define BELKIN_F7D4302_MAGIC 0x20101006
+#define BELKIN_F7D4401_MAGIC 0x00018517
+#define BELKIN_F7DXXXX_QA_MAGIC	0x12345678
+
 struct trx_header {
 	uint32_t magic;		/* "HDR0" */
 	uint32_t len;		/* Length of file including header */
@@ -53,6 +60,22 @@ struct trx_header {
 
 ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
+
+static bool is_trx_magic(uint32_t magic)
+{
+	magic = STORE32_LE(magic);
+	switch (magic) {
+	case TRX_MAGIC:
+	case BELKIN_F7D3301_MAGIC:
+	case BELKIN_F7D3302_MAGIC:
+	case BELKIN_F7D4302_MAGIC:
+	case BELKIN_F7D4401_MAGIC:
+	case BELKIN_F7DXXXX_QA_MAGIC:
+		return true;
+	default:
+		return false;
+	}
+}
 
 int
 trx_fixup(int fd, const char *name)
@@ -82,7 +105,7 @@ trx_fixup(int fd, const char *name)
 	}
 
 	trx = ptr;
-	if (trx->magic != TRX_MAGIC) {
+	if (!is_trx_magic(trx->magic)) {
 		fprintf(stderr, "TRX header not found\n");
 		goto err;
 	}
@@ -116,7 +139,7 @@ trx_check(int imagefd, const char *mtd, char *buf, int *len)
 		return 0;
 	}
 
-	if (trx->magic != TRX_MAGIC || trx->len < sizeof(struct trx_header)) {
+	if (!is_trx_magic(trx->magic) || trx->len < sizeof(struct trx_header)) {
 		if (quiet < 2) {
 			fprintf(stderr, "Bad trx header\n");
 			fprintf(stderr, "This is not the correct file format; refusing to flash.\n"
@@ -181,7 +204,7 @@ mtd_fixtrx(const char *mtd, size_t offset)
 	}
 
 	trx = (struct trx_header *) (buf + offset);
-	if (trx->magic != STORE32_LE(0x30524448)) {
+	if (!is_trx_magic(trx->magic)) {
 		fprintf(stderr, "No trx magic found\n");
 		exit(1);
 	}
