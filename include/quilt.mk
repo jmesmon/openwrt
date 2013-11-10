@@ -31,7 +31,7 @@ define PatchDir/Quilt
 		mkdir -p "$(1)/patches/$(3)"; \
 		cp "$(2)/series" "$(1)/patches/$(3)"; \
 	fi
-	@for patch in $$$$( (cd "$(2)" && if [ -f series ]; then $(call filter_series,series); else ls | sort; fi; ) 2>/dev/null ); do ( \
+	@for patch in $$$$( (cd "$(2)" && if [ -f series ]; then $(call filter_series,series); else ls | sort | grep -v '^.*~$$$$'; fi; ) 2>/dev/null ); do ( \
 		cp "$(2)/$$$$patch" "$(1)/patches/$(3)"; \
 		echo "$(3)$$$$patch" >> "$(1)/patches/series"; \
 	); done
