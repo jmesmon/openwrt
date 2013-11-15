@@ -1,0 +1,77 @@
+From d3ce86409a441ad376dfab73c6cfdfe0f995e6eb Mon Sep 17 00:00:00 2001
+From: Cody P Schafer <dev@codyps.com>
+Date: Sun, 11 May 2014 16:43:47 -0700
+Subject: [PATCH] mips/bcm47xx: add generic Belkin F7Dxxxx support
+
+Signed-off-by: Cody P Schafer <dev@codyps.com>
+---
+ arch/mips/bcm47xx/board.c                          | 7 ++++---
+ arch/mips/bcm47xx/buttons.c                        | 1 +
+ arch/mips/bcm47xx/leds.c                           | 1 +
+ arch/mips/include/asm/mach-bcm47xx/bcm47xx_board.h | 1 +
+ 4 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/arch/mips/bcm47xx/board.c b/arch/mips/bcm47xx/board.c
+index 44ab1be..8941a2d 100644
+--- a/arch/mips/bcm47xx/board.c
++++ b/arch/mips/bcm47xx/board.c
+@@ -183,6 +183,7 @@ struct bcm47xx_board_type_list3 bcm47xx_board_list_board[] __initconst = {
+ 	{{BCM47XX_BOARD_LINKSYS_WRT54G, "Linksys WRT54G/GS/GL"}, "0x0101", "42", "0x10"},
+ 	{{BCM47XX_BOARD_LINKSYS_WRT54G, "Linksys WRT54G/GS/GL"}, "0x0467", "42", "0x10"},
+ 	{{BCM47XX_BOARD_LINKSYS_WRT54G, "Linksys WRT54G/GS/GL"}, "0x0708", "42", "0x10"},
++	{{BCM47XX_BOARD_BELKIN_F7DXXXX, "Belkin F7Dxxxx"}, "0xa4cf", NULL, "0x1102"},
+ 	{ {0}, NULL},
+ };
+ 
+@@ -280,9 +281,9 @@ static __init const struct bcm47xx_board_type *bcm47xx_board_get_nvram(void)
+ 	    bcm47xx_nvram_getenv("boardnum", buf2, sizeof(buf2)) >= 0 &&
+ 	    bcm47xx_nvram_getenv("boardrev", buf3, sizeof(buf3)) >= 0) {
+ 		for (e3 = bcm47xx_board_list_board; e3->value1; e3++) {
+-			if (!strcmp(buf1, e3->value1) &&
+-			    !strcmp(buf2, e3->value2) &&
+-			    !strcmp(buf3, e3->value3))
++			if ((!e3->value1 || !strcmp(buf1, e3->value1)) &&
++			    (!e3->value2 || !strcmp(buf2, e3->value2)) &&
++			    (!e3->value3 || !strcmp(buf3, e3->value3)))
+ 				return &e3->board;
+ 		}
+ 	}
+diff --git a/arch/mips/bcm47xx/buttons.c b/arch/mips/bcm47xx/buttons.c
+index 49a1ce0..648f09d 100644
+--- a/arch/mips/bcm47xx/buttons.c
++++ b/arch/mips/bcm47xx/buttons.c
+@@ -425,6 +425,7 @@ int __init bcm47xx_buttons_register(void)
+ 	case BCM47XX_BOARD_BELKIN_F7D4301:
+ 	case BCM47XX_BOARD_BELKIN_F7D4302:
+ 	case BCM47XX_BOARD_BELKIN_F7D4401:
++	case BCM47XX_BOARD_BELKIN_F7DXXXX:
+ 		err = bcm47xx_copy_bdata(bcm47xx_buttons_belkin_f7d4301);
+ 		break;
+ 
+diff --git a/arch/mips/bcm47xx/leds.c b/arch/mips/bcm47xx/leds.c
+index adcb547..655ebf2 100644
+--- a/arch/mips/bcm47xx/leds.c
++++ b/arch/mips/bcm47xx/leds.c
+@@ -462,6 +462,7 @@ void __init bcm47xx_leds_register(void)
+ 	case BCM47XX_BOARD_BELKIN_F7D4301:
+ 	case BCM47XX_BOARD_BELKIN_F7D4302:
+ 	case BCM47XX_BOARD_BELKIN_F7D4401:
++	case BCM47XX_BOARD_BELKIN_F7DXXXX:
+ 		bcm47xx_set_pdata(bcm47xx_leds_belkin_f7d4301);
+ 		break;
+ 
+diff --git a/arch/mips/include/asm/mach-bcm47xx/bcm47xx_board.h b/arch/mips/include/asm/mach-bcm47xx/bcm47xx_board.h
+index bba7399..63fc87c 100644
+--- a/arch/mips/include/asm/mach-bcm47xx/bcm47xx_board.h
++++ b/arch/mips/include/asm/mach-bcm47xx/bcm47xx_board.h
+@@ -32,6 +32,7 @@ enum bcm47xx_board {
+ 	BCM47XX_BOARD_BELKIN_F7D4301,
+ 	BCM47XX_BOARD_BELKIN_F7D4302,
+ 	BCM47XX_BOARD_BELKIN_F7D4401,
++	BCM47XX_BOARD_BELKIN_F7DXXXX,
+ 
+ 	BCM47XX_BOARD_BUFFALO_WBR2_G54,
+ 	BCM47XX_BOARD_BUFFALO_WHR2_A54G54,
+-- 
+1.9.2
+
