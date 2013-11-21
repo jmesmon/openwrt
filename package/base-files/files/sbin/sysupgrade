@@ -32,7 +32,7 @@ while [ -n "$1" ]; do
 		-r|--restore-backup) export CONF_RESTORE="$2" NEED_IMAGE=1; shift;;
 		-l|--list-backup) export CONF_BACKUP_LIST=1; break;;
 		-f) export CONF_IMAGE="$2"; shift;;
-		-F|--force) export FORCE=1;;
+	        -F|--force) export FORCE="$(($FORCE + 1))";;
 		-T|--test) export TEST=1;;
 		-h|--help) export HELP=1; break;;
 		-*)
@@ -173,7 +173,7 @@ type platform_check_image >/dev/null 2>/dev/null || {
 
 for check in $sysupgrade_image_check; do
 	( eval "$check \"\$ARGV\"" ) || {
-		if [ $FORCE -eq 1 ]; then
+		if [ $FORCE -gt 0 ]; then
 			echo "Image check '$check' failed but --force given - will update anyway!"
 			break
 		else
