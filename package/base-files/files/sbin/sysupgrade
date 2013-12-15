@@ -65,6 +65,7 @@ upgrade-option:
 	             Verify image and config .tar.gz but do not actually flash.
 	-F | --force
 	             Flash image even if image checks fail, this is dangerous!
+		     Pass 2 or more -F's to additionally bypass mtd's checking.
 	-q           less verbose
 	-v           more verbose
 	-h | --help  display this help
